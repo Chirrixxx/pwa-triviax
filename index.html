@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trivia de Fútbol</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#10B981">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/5691/5691719.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/5691/5691719.png">
+
     <style>
         :root {
             --primary-color: #10B981;
@@ -155,6 +161,12 @@
     </div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js');
+            });
+        }
+
         const triviaData = [
             {
                 question: "¿Qué país ha ganado más Copas del Mundo de la FIFA?",
@@ -261,3 +273,4 @@
     </script>
 </body>
 </html>
+ 

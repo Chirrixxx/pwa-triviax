@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia de Fútbol</title>
+    <style>
+        :root {
+            --primary-color: #10B981;
+            --primary-hover: #059669;
+            --bg-color: #F3F4F6;
+            --text-color: #1F2937;
+            --correct-color: #10B981;
+            --wrong-color: #EF4444;
+            --card-bg: #FFFFFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #6B7280;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 2px solid #E5E7EB;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+
+        .btn:hover:not(:disabled) {
+            border-color: var(--primary-color);
+            background-color: #F8FAFC;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+        }
+
+        .btn.correct {
+            background-color: var(--correct-color);
+            border-color: var(--correct-color);
+            color: white;
+        }
+
+        .btn.wrong {
+            background-color: var(--wrong-color);
+            border-color: var(--wrong-color);
+            color: white;
+        }
+
+        .next-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .next-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .result-container h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-container p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            color: #4B5563;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container" id="quiz-container">
+        <div id="quiz-inner">
+            <div class="header">
+                <span id="question-tracker">Pregunta 1/4</span>
+                <span id="score-tracker">Puntos: 0</span>
+            </div>
+            <h2 id="question"></h2>
+            <div class="options-container" id="options"></div>
+            <button class="next-btn" id="next-btn">Siguiente Pregunta</button>
+        </div>
+
+        <div id="result-inner" class="result-container hidden">
+            <h2>¡Juego Terminado! ⚽</h2>
+            <p id="final-score"></p>
+            <button class="next-btn" style="display: block;" onclick="restartGame()">Jugar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        const triviaData = [
+            {
+                question: "¿Qué país ha ganado más Copas del Mundo de la FIFA?",
+                options: ["Alemania", "Brasil", "Argentina", "Italia"],
+                correct: 1
+            },
+            {
+                question: "¿Quién es el máximo goleador histórico en las Copas del Mundo?",
+                options: ["Miroslav Klose", "Pelé", "Ronaldo Nazário", "Cristiano Ronaldo"],
+                correct: 0
+            },
+            {
+                question: "¿Qué club ha ganado más veces la UEFA Champions League?",
+                options: ["FC Barcelona", "AC Milan", "Real Madrid", "Bayern Múnich"],
+                correct: 2
+            },
+            {
+                question: "¿En qué país se celebró el primer Mundial de Fútbol en 1930?",
+                options: ["Uruguay", "Brasil", "Italia", "Francia"],
+                correct: 0
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        const questionEl = document.getElementById("question");
+        const optionsEl = document.getElementById("options");
+        const nextBtn = document.getElementById("next-btn");
+        const quizInner = document.getElementById("quiz-inner");
+        const resultInner = document.getElementById("result-inner");
+        const finalScoreEl = document.getElementById("final-score");
+        const questionTracker = document.getElementById("question-tracker");
+        const scoreTracker = document.getElementById("score-tracker");
+
+        function loadQuestion() {
+            resetState();
+            const currentData = triviaData[currentQuestionIndex];
+            
+            questionEl.innerText = currentData.question;
+            questionTracker.innerText = `Pregunta ${currentQuestionIndex + 1}/${triviaData.length}`;
+            scoreTracker.innerText = `Puntos: ${score}`;
+
+            currentData.options.forEach((option, index) => {
+                const button = document.createElement("button");
+                button.innerText = option;
+                button.classList.add("btn");
+                button.addEventListener("click", () => selectAnswer(index));
+                optionsEl.appendChild(button);
+            });
+        }
+
+        function resetState() {
+            nextBtn.style.display = "none";
+            optionsEl.innerHTML = "";
+        }
+
+        function selectAnswer(selectedIndex) {
+            const currentData = triviaData[currentQuestionIndex];
+            const isCorrect = selectedIndex === currentData.correct;
+            const buttons = optionsEl.children;
+
+            if (isCorrect) {
+                score++;
+                scoreTracker.innerText = `Puntos: ${score}`;
+            }
+
+            Array.from(buttons).forEach((button, index) => {
+                button.disabled = true;
+                if (index === currentData.correct) {
+                    button.classList.add("correct");
+                } else if (index === selectedIndex && !isCorrect) {
+                    button.classList.add("wrong");
+                }
+            });
+
+            nextBtn.style.display = "block";
+        }
+
+        nextBtn.addEventListener("click", () => {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < triviaData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        function showResults() {
+            quizInner.classList.add("hidden");
+            resultInner.classList.remove("hidden");
+            finalScoreEl.innerText = `Has acertado ${score} de ${triviaData.length} preguntas.`;
+        }
+
+        function restartGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            resultInner.classList.add("hidden");
+            quizInner.classList.remove("hidden");
+            loadQuestion();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
